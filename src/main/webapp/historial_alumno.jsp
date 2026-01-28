@@ -118,8 +118,12 @@
 
                     <div class="price">
                         <c:choose>
-                            <c:when test="${clase.estado == 'CANCELADA'}">0 €</c:when>
-                            <c:otherwise>${clase.precio} €</c:otherwise>
+                            <c:when test="${clase.estado == 'CANCELADA'}">
+                                0 €
+                            </c:when>
+                            <c:otherwise>
+                                ${clase.precioCalculado} €
+                            </c:otherwise>
                         </c:choose>
                     </div>
                 </div>
