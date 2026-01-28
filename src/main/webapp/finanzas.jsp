@@ -13,28 +13,69 @@
     <meta charset="UTF-8">
     <title>Reporte Financiero Semanal</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 10px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
         
-        h1 { text-align: center; color: #2c3e50; }
+        h1 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-top: 10px;}
         
-        /* Filtro */
-        .filtro { background: white; padding: 20px; border-radius: 10px; display: flex; gap: 10px; justify-content: center; align-items: center; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        select, input { padding: 10px; border-radius: 5px; border: 1px solid #bdc3c7; }
-        button { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* BOTÓN VOLVER */
+        .btn-back { display: block; text-align: center; padding: 12px; background: #95a5a6; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 20px; }
+
+        /* FILTRO */
+        .filtro { background: white; padding: 15px; border-radius: 10px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        select, input { padding: 10px; border-radius: 5px; border: 1px solid #bdc3c7; flex: 1; min-width: 100px; font-size: 16px; } /* font-size 16px evita zoom en iPhone */
+        button { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
         
-        /* Tarjeta de Semana */
-        .semana-card { background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden; }
-        .semana-header { background: #34495e; color: white; padding: 15px; font-size: 1.1em; font-weight: bold; display: flex; justify-content: space-between; }
+        /* ESTILO BASE (PC) */
+        .semana-card { background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
+        .semana-header { background: #34495e; color: white; padding: 15px; font-size: 1.1em; font-weight: bold; }
         
         table { width: 100%; border-collapse: collapse; }
         td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; color: #555; }
-        tr:last-child td { border-bottom: none; }
-        
         .dinero { font-weight: bold; color: #27ae60; text-align: right; }
-        .resumen-total { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; text-align: center; font-size: 1.5em; margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         
-        .btn-back { display: inline-block; margin-bottom: 15px; padding: 8px 15px; background: #95a5a6; color: white; text-decoration: none; border-radius: 5px; }
+        .resumen-total { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; text-align: center; font-size: 1.5em; position: sticky; bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); margin-top: 20px; z-index: 100; }
+
+        /* --- MODO MÓVIL (Magia Responsiva) --- */
+        @media (max-width: 768px) {
+            /* Ocultamos cosas innecesarias */
+            thead { display: none; } 
+            
+            /* Convertimos la tabla en bloques */
+            table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box;}
+            
+            /* Cada fila (tr) es ahora una tarjeta individual */
+            tr {
+                margin-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                padding: 10px 15px;
+                display: flex;
+                justify-content: space-between; /* Nombre a la izq, dinero a la derecha */
+                align-items: center;
+            }
+            
+            /* Ajustes finos de las celdas */
+            td { 
+                padding: 5px 0; 
+                border: none; 
+                text-align: left;
+            }
+
+            /* El nombre del alumno (primer td) en negrita y grande */
+            td:first-child { font-weight: 600; color: #333; font-size: 1.1em; }
+            
+            /* El número de clases (segundo td) más pequeño */
+            td:nth-child(2) { font-size: 0.85em; color: #999; text-align: right; }
+            
+            /* El dinero (tercer td) grande y verde */
+            td:last-child { font-size: 1.2em; text-align: right; }
+            
+            /* Reorganizamos visualmente con Flexbox para que quede bonito */
+            tr { flex-wrap: wrap; }
+            td:first-child { width: 100%; margin-bottom: 5px; } /* Nombre ocupa toda la fila arriba */
+            td:nth-child(2) { width: 50%; text-align: left; }  /* "3 clases" a la izq abajo */
+            td:last-child { width: 50%; text-align: right; }   /* "45€" a la derecha abajo */
+        }
     </style>
 </head>
 <body>

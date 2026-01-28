@@ -34,6 +34,13 @@
         .btn-check { background: #2ecc71; } /* Verde */
         .btn-cancel { background: #e74c3c; } /* Rojo */
         .btn-pending { background: #3498db; } /* Azul */
+        
+        @media (max-width: 768px) {
+    .header { flex-direction: column; gap: 10px; text-align: center; }
+    h2 { font-size: 1.2em; margin: 10px 0; }
+    .fc-toolbar-title { font-size: 1em !important; } /* Título del mes más pequeño */
+    .fc .fc-button { padding: 4px 8px; font-size: 0.8em; } /* Botones del calendario más pequeños */
+}
     </style>
 </head>
 <body>
@@ -67,44 +74,48 @@
 
       document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        
+        // DETECTOR DE MÓVIL
+        // Si la pantalla mide menos de 768px, asumimos que es un móvil
+        var esMovil = window.innerWidth < 768;
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'timeGridWeek',
+          // Si es móvil, vista diaria. Si es PC, vista semanal.
+          initialView: esMovil ? 'timeGridDay' : 'timeGridWeek',
+          
           locale: 'es',
           firstDay: 1,
           slotMinTime: "08:00:00",
           slotMaxTime: "22:00:00",
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek'
-          },
-          events: 'SvCalendario', // Carga los datos del Servlet
           
-          // AL HACER CLIC EN UNA CLASE
+          // Barra de herramientas simplificada para móvil
+          headerToolbar: {
+            left: esMovil ? 'prev,next' : 'prev,next today',
+            center: 'title',
+            right: esMovil ? 'dayGridMonth,timeGridDay' : 'dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          
+          // Altura dinámica: Que ocupe toda la pantalla del móvil menos un poquito
+          height: esMovil ? '85vh' : 'auto', 
+          
+          events: 'SvCalendario',
+          
           eventClick: function(info) {
-            // Ponemos los datos en el Modal
             document.getElementById('modalTitle').innerText = info.event.title;
-            document.getElementById('modalInfo').innerText = "Horario: " + info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            // Formato de hora amigable
+            var hora = info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('modalInfo').innerText = "Horario: " + hora;
             document.getElementById('idClaseHidden').value = info.event.id;
             
-            // Mostramos el Modal
             modal.style.display = "block";
           }
         });
+        
         calendar.render();
       });
 
-      // Función para cerrar el modal
-      function cerrarModal() {
-        modal.style.display = "none";
-      }
-
-      // Cerrar si clicamos fuera de la cajita
-      window.onclick = function(event) {
-        if (event.target == modal) {
-          cerrarModal();
-        }
-      }
+      function cerrarModal() { modal.style.display = "none"; }
+      window.onclick = function(event) { if (event.target == modal) cerrarModal(); }
     </script>
 
 </body>
