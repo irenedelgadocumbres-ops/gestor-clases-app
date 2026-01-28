@@ -6,12 +6,14 @@ package com.logica;
 
 public class ReporteItem {
     private int semana; // Nuevo campo: Semana del año (1-52)
+    private int idAlumno;
     private String nombreAlumno;
     private int totalClases;
     private double totalGanado;
 
     public ReporteItem(int semana, String nombreAlumno, int totalClases, double totalGanado) {
         this.semana = semana;
+        this.idAlumno = idAlumno; // <--- NUEVO
         this.nombreAlumno = nombreAlumno;
         this.totalClases = totalClases;
         this.totalGanado = totalGanado;

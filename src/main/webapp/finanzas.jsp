@@ -146,6 +146,9 @@
 <body>
 
     <div class="hero">
+        <a href="SvDetalleFinanzas" style="display:block; text-align:center; margin: 15px auto; width: 90%; background: white; padding: 15px; border-radius: 12px; text-decoration: none; color: #2c3e50; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    🔍 Ver Historial Detallado por Alumno
+</a>
         <div class="top-nav">
             <a href="menu.jsp" class="back-btn">⬅</a>
         </div>
