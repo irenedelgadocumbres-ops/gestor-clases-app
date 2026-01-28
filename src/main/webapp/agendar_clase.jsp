@@ -6,118 +6,205 @@
 
 <%@page import="java.sql.*"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    if (request.getSession().getAttribute("usuarioLogueado") == null) {
+        response.sendRedirect("index.html");
+        return;
+    }
+%>
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Agendar Clase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nueva Clase</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f8f9fa;
+            --input-bg: #f0f2f5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: white;
+            margin: 0; padding: 0;
+            color: #333;
+        }
+
+        /* HEADER SIMPLE */
+        .header {
+            padding: 15px 20px;
+            display: flex; align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .btn-close {
+            text-decoration: none; font-size: 1.5rem; color: #333; margin-right: 15px; line-height: 1;
+        }
+        .title { font-size: 1.2rem; font-weight: 700; margin: 0; }
+
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+
+        /* SWITCHER TIPO IOS (PESTAÑAS) */
+        .segment-control {
+            background: var(--input-bg);
+            padding: 4px; border-radius: 12px;
+            display: flex; margin-bottom: 25px;
+        }
         
-        label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .segment-option {
+            flex: 1; text-align: center; padding: 10px;
+            font-size: 0.9rem; font-weight: 600; color: #7f8c8d;
+            border-radius: 9px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
         
-        /* Estilos para los modos */
-        .mode-selector { display: flex; gap: 20px; margin-bottom: 20px; background: #ecf0f1; padding: 10px; border-radius: 10px; justify-content: center; }
+        .segment-option.active {
+            background: white; color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* INPUTS MODERNOS */
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--primary); margin-top: 20px; }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: var(--input-bg);
+            border: none; border-radius: 12px;
+            font-size: 1rem; color: #333;
+            box-sizing: border-box; /* Importante para que no se salga */
+            appearance: none; /* Quita estilo feo nativo */
+        }
+        
+        input:focus, select:focus { outline: 2px solid var(--accent); background: white; }
+
+        /* Para inputs de fecha/hora en iOS */
+        input[type="date"], input[type="time"] { min-height: 50px; }
+
+        /* FILA DOBLE (HORAS) */
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+
+        /* BOTÓN GUARDAR GRANDE */
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%; padding: 18px;
+            border-radius: 16px;
+            font-size: 1.1rem; font-weight: 700;
+            margin-top: 30px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+        }
+        .btn-save:active { transform: scale(0.98); }
+
         .hidden { display: none; }
-        
-        button { width: 100%; background: #3498db; color: white; padding: 15px; margin-top: 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2980b9; }
-        .btn-back { display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none; }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>📅 Agendar Clase Suelta</h1>
+    <div class="header">
+        <a href="calendario.jsp" class="btn-close">✕</a>
+        <h1 class="title">Agendar Clase</h1>
+    </div>
 
-    <form action="SvGuardarClase" method="POST">
-        
-        <div class="mode-selector">
-            <label style="margin:0; cursor:pointer;">
-                <input type="radio" name="tipo_alumno" value="existente" checked onclick="cambiarModo()"> 
-                Alumno Registrado
-            </label>
-            <label style="margin:0; cursor:pointer;">
-                <input type="radio" name="tipo_alumno" value="nuevo" onclick="cambiarModo()"> 
-                Esporádico / Otro
-            </label>
-        </div>
-
-        <div id="bloqueExistente">
-            <label>Seleccionar Alumno:</label>
-            <select name="id_alumno">
-                <option value="">-- Elige uno --</option>
-                <%
-                    try {
-                        Class.forName("org.postgresql.Driver");
-                        String url = "jdbc:postgresql://aws-1-eu-west-3.pooler.supabase.com:6543/postgres?sslmode=require";
-                        String user = "postgres.zlhodgwknbvrgqgqfxtj";
-                        String pass = "APPCLASES2026";
-                        Connection conn = DriverManager.getConnection(url, user, pass);
-                        Statement st = conn.createStatement();
-                        ResultSet rs = st.executeQuery("SELECT id, nombre FROM alumnos WHERE activo=true ORDER BY nombre");
-                        while(rs.next()){
-                %>
-                    <option value="<%= rs.getInt("id") %>"><%= rs.getString("nombre") %></option>
-                <%
-                        }
-                        conn.close();
-                    } catch(Exception e) {}
-                %>
-            </select>
-        </div>
-
-        <div id="bloqueNuevo" class="hidden">
-            <label>Nombre del Alumno:</label>
-            <input type="text" name="nombre_nuevo" placeholder="Ej: Primo de Juan">
+    <div class="container">
+        <form action="SvGuardarClase" method="POST">
             
-            <label>Precio Clase (€):</label>
-            <input type="number" name="precio_nuevo" step="0.5" value="15">
-        </div>
-
-        <hr>
-
-        <label>Asignatura / Título:</label>
-        <input type="text" name="titulo" placeholder="Ej: Mates" required>
-
-        <label>Fecha:</label>
-        <input type="date" name="fecha" required>
-
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
-                <label>Inicio:</label>
-                <input type="time" name="hora_inicio" required>
+            <div class="segment-control">
+                <div class="segment-option active" id="tab1" onclick="cambiarModo('existente')">Alumno Registrado</div>
+                <div class="segment-option" id="tab2" onclick="cambiarModo('nuevo')">Esporádico</div>
             </div>
-            <div style="flex: 1;">
-                <label>Fin:</label>
-                <input type="time" name="hora_fin" required>
+
+            <div style="display:none;">
+                <input type="radio" name="tipo_alumno" value="existente" id="radioExistente" checked>
+                <input type="radio" name="tipo_alumno" value="nuevo" id="radioNuevo">
             </div>
-        </div>
 
-        <button type="submit">Guardar Clase</button>
-    </form>
-    
-    <a href="calendario.jsp" class="btn-back">Cancelar</a>
-</div>
+            <div id="bloqueExistente">
+                <label>Seleccionar Alumno</label>
+                <select name="id_alumno">
+                    <option value="">▼ Elige un alumno</option>
+                    <%
+                        try {
+                            // CONEXIÓN RÁPIDA PARA EL SELECT
+                            Class.forName("org.postgresql.Driver");
+                            String url = "jdbc:postgresql://aws-1-eu-west-3.pooler.supabase.com:6543/postgres?sslmode=require";
+                            String user = "postgres.zlhodgwknbvrgqgqfxtj";
+                            String pass = "APPCLASES2026";
+                            Connection conn = DriverManager.getConnection(url, user, pass);
+                            Statement st = conn.createStatement();
+                            ResultSet rs = st.executeQuery("SELECT id, nombre FROM alumnos WHERE activo=true ORDER BY nombre");
+                            while(rs.next()){
+                    %>
+                        <option value="<%= rs.getInt("id") %>"><%= rs.getString("nombre") %></option>
+                    <%
+                            }
+                            conn.close();
+                        } catch(Exception e) {}
+                    %>
+                </select>
+            </div>
 
-<script>
-    function cambiarModo() {
-        var tipo = document.querySelector('input[name="tipo_alumno"]:checked').value;
-        var bloqueExistente = document.getElementById("bloqueExistente");
-        var bloqueNuevo = document.getElementById("bloqueNuevo");
+            <div id="bloqueNuevo" class="hidden">
+                <label>Nombre del Alumno</label>
+                <input type="text" name="nombre_nuevo" placeholder="Ej: Clase de prueba">
+                
+                <label>Precio (€)</label>
+                <input type="number" name="precio_nuevo" step="0.5" value="15" inputmode="decimal">
+            </div>
 
-        if (tipo === "existente") {
-            bloqueExistente.classList.remove("hidden");
-            bloqueNuevo.classList.add("hidden");
-        } else {
-            bloqueExistente.classList.add("hidden");
-            bloqueNuevo.classList.remove("hidden");
+            <label style="margin-top: 30px;">Asignatura / Nota</label>
+            <input type="text" name="titulo" placeholder="Ej: Matemáticas" required>
+
+            <label>Fecha</label>
+            <input type="date" name="fecha" id="fechaInput" required>
+
+            <div class="row">
+                <div class="col">
+                    <label>Inicio</label>
+                    <input type="time" name="hora_inicio" required>
+                </div>
+                <div class="col">
+                    <label>Fin</label>
+                    <input type="time" name="hora_fin" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save">Guardar Clase</button>
+        </form>
+    </div>
+
+    <script>
+        // Poner la fecha de HOY por defecto
+        document.getElementById('fechaInput').valueAsDate = new Date();
+
+        function cambiarModo(modo) {
+            // 1. Cambiar estilo visual de las pestañas
+            if (modo === 'existente') {
+                document.getElementById('tab1').classList.add('active');
+                document.getElementById('tab2').classList.remove('active');
+                
+                // Mostrar/Ocultar bloques
+                document.getElementById('bloqueExistente').classList.remove('hidden');
+                document.getElementById('bloqueNuevo').classList.add('hidden');
+                
+                // Marcar el radio button real (oculto) para que Java lo entienda
+                document.getElementById('radioExistente').checked = true;
+            } else {
+                document.getElementById('tab2').classList.add('active');
+                document.getElementById('tab1').classList.remove('active');
+                
+                document.getElementById('bloqueExistente').classList.add('hidden');
+                document.getElementById('bloqueNuevo').classList.remove('hidden');
+                
+                document.getElementById('radioNuevo').checked = true;
+            }
         }
-    }
-</script>
+    </script>
 
 </body>
 </html>

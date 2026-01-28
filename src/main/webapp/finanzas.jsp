@@ -6,150 +6,211 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
+<%@taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Financiero Semanal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mis Ingresos</title>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; padding: 10px; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
-        
-        h1 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-top: 10px;}
-        
-        /* BOTÓN VOLVER */
-        .btn-back { display: block; text-align: center; padding: 12px; background: #95a5a6; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 20px; }
-
-        /* FILTRO */
-        .filtro { background: white; padding: 15px; border-radius: 10px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        select, input { padding: 10px; border-radius: 5px; border: 1px solid #bdc3c7; flex: 1; min-width: 100px; font-size: 16px; } /* font-size 16px evita zoom en iPhone */
-        button { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; }
-        
-        /* ESTILO BASE (PC) */
-        .semana-card { background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
-        .semana-header { background: #34495e; color: white; padding: 15px; font-size: 1.1em; font-weight: bold; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; color: #555; }
-        .dinero { font-weight: bold; color: #27ae60; text-align: right; }
-        
-        .resumen-total { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; text-align: center; font-size: 1.5em; position: sticky; bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); margin-top: 20px; z-index: 100; }
-
-        /* --- MODO MÓVIL (Magia Responsiva) --- */
-        @media (max-width: 768px) {
-            /* Ocultamos cosas innecesarias */
-            thead { display: none; } 
-            
-            /* Convertimos la tabla en bloques */
-            table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box;}
-            
-            /* Cada fila (tr) es ahora una tarjeta individual */
-            tr {
-                margin-bottom: 10px;
-                border-bottom: 1px solid #eee;
-                padding: 10px 15px;
-                display: flex;
-                justify-content: space-between; /* Nombre a la izq, dinero a la derecha */
-                align-items: center;
-            }
-            
-            /* Ajustes finos de las celdas */
-            td { 
-                padding: 5px 0; 
-                border: none; 
-                text-align: left;
-            }
-
-            /* El nombre del alumno (primer td) en negrita y grande */
-            td:first-child { font-weight: 600; color: #333; font-size: 1.1em; }
-            
-            /* El número de clases (segundo td) más pequeño */
-            td:nth-child(2) { font-size: 0.85em; color: #999; text-align: right; }
-            
-            /* El dinero (tercer td) grande y verde */
-            td:last-child { font-size: 1.2em; text-align: right; }
-            
-            /* Reorganizamos visualmente con Flexbox para que quede bonito */
-            tr { flex-wrap: wrap; }
-            td:first-child { width: 100%; margin-bottom: 5px; } /* Nombre ocupa toda la fila arriba */
-            td:nth-child(2) { width: 50%; text-align: left; }  /* "3 clases" a la izq abajo */
-            td:last-child { width: 50%; text-align: right; }   /* "45€" a la derecha abajo */
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60; /* Verde Dinero */
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-grey: #7f8c8d;
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px; /* Espacio para scroll final */
+        }
+
+        /* --- HERO SECTION (La cabecera azul) --- */
+        .hero {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px 20px 50px 20px; /* Padding extra abajo para el filtro */
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+            position: relative;
+        }
+
+        .top-nav { display: flex; align-items: center; margin-bottom: 20px; }
+        .back-btn { color: white; text-decoration: none; font-size: 1.2rem; background: rgba(255,255,255,0.2); width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        
+        .hero-title { font-size: 0.9rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+        .hero-total { font-size: 3rem; font-weight: 700; margin: 5px 0 0 0; }
+        .currency { font-size: 1.5rem; vertical-align: super; opacity: 0.8; }
+
+        /* --- FILTRO FLOTANTE --- */
+        .filter-container {
+            background: white;
+            width: 85%;
+            margin: -30px auto 20px auto; /* Margen negativo para solapar */
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        select, input {
+            border: none;
+            background: #f0f2f5;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: 600;
+            width: 100%;
+        }
+        
+        .btn-update {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 45px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- LISTA DE RESULTADOS --- */
+        .content { padding: 0 20px; }
+
+        .week-label {
+            color: var(--text-grey);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: 20px 0 10px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* TARJETA DE ALUMNO */
+        .income-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: transform 0.1s;
+        }
+        .income-card:active { transform: scale(0.98); }
+
+        .card-left { display: flex; align-items: center; gap: 15px; }
+
+        /* Avatar con inicial */
+        .avatar {
+            width: 45px; height: 45px;
+            background: #ecf0f1;
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .student-info h4 { margin: 0; font-size: 1rem; color: #2c3e50; }
+        .student-info p { margin: 3px 0 0 0; font-size: 0.8rem; color: #95a5a6; }
+
+        .price-tag {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            margin-top: 50px;
+            color: #bdc3c7;
+        }
+        .empty-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <a href="menu.jsp" class="btn-back">⬅ Volver al Menú</a>
-    
-    <h1>💰 Ingresos por Semanas</h1>
-
-    <form action="SvFinanzas" method="GET" class="filtro">
-        <label>Mes:</label>
-        <select name="mes">
-            <option value="1" ${mesSeleccionado == 1 ? 'selected' : ''}>Enero</option>
-            <option value="2" ${mesSeleccionado == 2 ? 'selected' : ''}>Febrero</option>
-            <option value="3" ${mesSeleccionado == 3 ? 'selected' : ''}>Marzo</option>
-            <option value="4" ${mesSeleccionado == 4 ? 'selected' : ''}>Abril</option>
-            <option value="5" ${mesSeleccionado == 5 ? 'selected' : ''}>Mayo</option>
-            <option value="6" ${mesSeleccionado == 6 ? 'selected' : ''}>Junio</option>
-            <option value="7" ${mesSeleccionado == 7 ? 'selected' : ''}>Julio</option>
-            <option value="8" ${mesSeleccionado == 8 ? 'selected' : ''}>Agosto</option>
-            <option value="9" ${mesSeleccionado == 9 ? 'selected' : ''}>Septiembre</option>
-            <option value="10" ${mesSeleccionado == 10 ? 'selected' : ''}>Octubre</option>
-            <option value="11" ${mesSeleccionado == 11 ? 'selected' : ''}>Noviembre</option>
-            <option value="12" ${mesSeleccionado == 12 ? 'selected' : ''}>Diciembre</option>
-        </select>
-        <input type="number" name="anio" value="${anioSeleccionado}" style="width: 70px;">
-        <button type="submit">Calcular</button>
-    </form>
-
-    <c:set var="semanaActual" value="-1" />
-    <c:set var="totalSemana" value="0.0" />
-
-    <c:forEach var="item" items="${listaFinanzas}" varStatus="status">
-        
-        <c:if test="${item.semana != semanaActual}">
-            
-            <c:if test="${semanaActual != -1}">
-                    </tbody>
-                </table>
-            </div> </c:if>
-
-            <div class="semana-card">
-                <div class="semana-header">
-                    <span>📅 Semana Nº ${item.semana}</span>
-                </div>
-                <table>
-                    <tbody>
-            
-            <c:set var="semanaActual" value="${item.semana}" />
-        </c:if>
-
-        <tr>
-            <td>${item.nombreAlumno}</td>
-            <td style="color: #7f8c8d; font-size: 0.9em;">(${item.totalClases} clases)</td>
-            <td class="dinero">+ ${item.totalGanado} €</td>
-        </tr>
-        
-        <c:if test="${status.last}">
-                </tbody>
-            </table>
+    <div class="hero">
+        <div class="top-nav">
+            <a href="menu.jsp" class="back-btn">⬅</a>
         </div>
-        </c:if>
-        
-    </c:forEach>
-    
-    <c:if test="${empty listaFinanzas}">
-        <p style="text-align: center; color: #999;">No hay ingresos registrados (y marcados como REALIZADA) en este mes.</p>
-    </c:if>
-
-    <div class="resumen-total">
-        TOTAL MES: <strong>${totalMes} €</strong>
+        <p class="hero-title">Ingresos Totales</p>
+        <h1 class="hero-total">${totalMes}<span class="currency">€</span></h1>
     </div>
 
-</div>
+    <form action="SvFinanzas" method="GET" class="filter-container">
+        <select name="mes">
+            <option value="1" ${mesSeleccionado == 1 ? 'selected' : ''}>Ene</option>
+            <option value="2" ${mesSeleccionado == 2 ? 'selected' : ''}>Feb</option>
+            <option value="3" ${mesSeleccionado == 3 ? 'selected' : ''}>Mar</option>
+            <option value="4" ${mesSeleccionado == 4 ? 'selected' : ''}>Abr</option>
+            <option value="5" ${mesSeleccionado == 5 ? 'selected' : ''}>Mayo</option>
+            <option value="6" ${mesSeleccionado == 6 ? 'selected' : ''}>Jun</option>
+            <option value="7" ${mesSeleccionado == 7 ? 'selected' : ''}>Jul</option>
+            <option value="8" ${mesSeleccionado == 8 ? 'selected' : ''}>Ago</option>
+            <option value="9" ${mesSeleccionado == 9 ? 'selected' : ''}>Sep</option>
+            <option value="10" ${mesSeleccionado == 10 ? 'selected' : ''}>Oct</option>
+            <option value="11" ${mesSeleccionado == 11 ? 'selected' : ''}>Nov</option>
+            <option value="12" ${mesSeleccionado == 12 ? 'selected' : ''}>Dic</option>
+        </select>
+        
+        <input type="number" name="anio" value="${anioSeleccionado}" style="width: 70px;">
+        
+        <button type="submit" class="btn-update">↻</button>
+    </form>
+
+    <div class="content">
+        
+        <c:set var="semanaActual" value="-1" />
+
+        <c:forEach var="item" items="${listaFinanzas}">
+            
+            <c:if test="${item.semana != semanaActual}">
+                <div class="week-label">📅 Semana ${item.semana}</div>
+                <c:set var="semanaActual" value="${item.semana}" />
+            </c:if>
+
+            <div class="income-card">
+                <div class="card-left">
+                    <div class="avatar">
+                        ${fn:substring(item.nombreAlumno, 0, 1)}
+                    </div>
+                    <div class="student-info">
+                        <h4>${item.nombreAlumno}</h4>
+                        <p>${item.totalClases} clases completadas</p>
+                    </div>
+                </div>
+                <div class="price-tag">
+                    +${item.totalGanado}€
+                </div>
+            </div>
+
+        </c:forEach>
+
+        <c:if test="${empty listaFinanzas}">
+            <div class="empty-state">
+                <span class="empty-icon">💸</span>
+                <p>No hay ingresos registrados este mes.</p>
+                <small>Marca clases como "Realizadas" en el calendario.</small>
+            </div>
+        </c:if>
+
+    </div>
 
 </body>
 </html>
